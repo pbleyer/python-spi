@@ -59,13 +59,46 @@ def _ioc(direction, number, structure):
 
     return direction, op, structure
 
+def object2bytes(data):
+    """
+    Convert object to best bytes (Python3) or string (Python2) representation
+    """
+    if sys.version_info >= (3, 0):
+        if isinstance(data, int): # Assume single byte, will error out otherwise
+            return int.to_bytes(data, 1, 'little')
+        elif isinstance(data, str): # Assume string with default encoding
+            return data.encode()
+        else: # Attempt to convert to bytes
+            return bytes(data)
+    else:
+        if isinstance(data, str):
+            return data
+        elif isinstance(data, int): # Assume single byte
+            return chr(data & 0xff)
+        else: # Attempt to convert to string
+            try:
+                return ''.join(chr(c & 0xff) for c in data)
+            except:
+                return str(data)
+
+def data2bytes(data):
+    """
+    Convert data to bytes (Python3) or string (Python2)
+    """
+    if sys.version_info >= (3, 0):
+        data = bytes(data)
+    else:
+        if isinstance(data, int):
+            data = [0] * data
+        data = array.array('B', data).tostring()
+
 def bytes2bytes(value):
     """
     Convert strings to arrays of integers leaving bytes values alone
 
     Args:
         value: a bytes object though on Python < 3.0 that's a string
-    
+
     Returns: An array of integers python <= 2.7 or a bytes object python >= 3.0
     """
     if sys.version_info >= (3, 0):
@@ -389,7 +422,7 @@ class SPI(object):
             delay: Optional delay in usecs between sending the last bit and
                 deselecting the chip select line. 0 (default) for no delay.
         """
-        data = array.array('B', data).tostring()
+        data = data2bytes(data)
         length = len(data)
         transmit_buffer = ctypes.create_string_buffer(data)
         spi_ioc_transfer = struct.pack(SPI._IOC_TRANSFER_FORMAT,
@@ -436,7 +469,7 @@ class SPI(object):
         Returns:
             List of words read from SPI bus during transfer
         """
-        data = array.array('B', data).tostring()
+        data = data2bytes(data)
         length = len(data)
         transmit_buffer = ctypes.create_string_buffer(data)
         receive_buffer = ctypes.create_string_buffer(length)
