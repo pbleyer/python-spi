@@ -86,11 +86,11 @@ def data2bytes(data):
     Convert data to bytes (Python3) or string (Python2)
     """
     if sys.version_info >= (3, 0):
-        data = bytes(data)
+        return bytes(data)
     else:
         if isinstance(data, int):
             data = [0] * data
-        data = array.array('B', data).tostring()
+        return array.array('B', data).tostring()
 
 def bytes2bytes(value):
     """
